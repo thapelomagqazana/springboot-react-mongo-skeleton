@@ -10,6 +10,7 @@ import java.util.Date;
  */
 @Document(collection = "users")
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -23,7 +24,9 @@ public class User {
 
     private String password;
 
+    @Builder.Default
     private Date created = new Date();
 
+    @Builder.Default
     private Date updated = new Date();
 }

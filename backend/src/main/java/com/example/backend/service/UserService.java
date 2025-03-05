@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.model.User;
 import com.example.backend.dto.UserUpdateRequest;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Valid;
@@ -51,5 +52,12 @@ public class UserService {
             user.setUpdated(new Date());
             return userRepository.save(user);
         });
+    }
+
+    public void deleteUser(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        userRepository.delete(user);
     }
 }

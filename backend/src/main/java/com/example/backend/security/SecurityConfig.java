@@ -1,29 +1,34 @@
 package com.example.backend.security;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.example.backend.security.JwtAuthenticationFilter;
+
 
 /**
- * Security config with proper 401 and 403 handling.
+ * Security configuration with JWT support.
  */
 @Configuration
 public class SecurityConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Handles 401 Unauthorized for unauthenticated requests.
-     */
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {
@@ -33,9 +38,6 @@ public class SecurityConfig {
         };
     }
 
-    /**
-     * Handles 403 Forbidden for authenticated but unauthorized access.
-     */
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
@@ -49,7 +51,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .exceptionHandling(exceptions -> exceptions
+            .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(authenticationEntryPoint())
                 .accessDeniedHandler(accessDeniedHandler())
             )
@@ -58,6 +60,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
                 .anyRequest().denyAll()
             )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .httpBasic().disable()
             .formLogin().disable();
 

@@ -37,6 +37,7 @@ public class UserUpdateControllerTest {
 
     private String userId;
     private String userJwt;
+    private String adminJwt;
 
     @BeforeEach
     void setUp() {
@@ -44,6 +45,7 @@ public class UserUpdateControllerTest {
         User user = userRepository.save(new User(null, "Original Name", "user@example.com", "Password123", "USER", null, null));
         userId = user.getId();
         userJwt = "Bearer " + jwtUtil.generateToken(userId, user.getEmail(), user.getRole());
+        adminJwt = "Bearer " + jwtUtil.generateToken(userId, user.getEmail(), "ADMIN");
     }
 
     @AfterEach
@@ -56,39 +58,43 @@ public class UserUpdateControllerTest {
     }
 
     // Positive Test Cases
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_001_updateUserWithValidData() throws Exception {
         mockMvc.perform(put("/api/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("name", "Updated Name", "email", "updated@example.com"))))
+                .content(toJson(Map.of("name", "Updated Name", "email", "updated@example.com")))
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Name"))
                 .andExpect(jsonPath("$.email").value("updated@example.com"));
     }
 
-    @Test @WithMockUser(roles = "ADMIN")
+    @Test
     void TC_UU_002_adminUpdatesAnyUserSuccessfully() throws Exception {
         mockMvc.perform(put("/api/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("name", "Admin Updated"))))
+                .content(toJson(Map.of("name", "Admin Updated")))
+                .header("Authorization", adminJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Admin Updated"));
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_003_updateWithMinimalValidFields() throws Exception {
         mockMvc.perform(put("/api/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("name", "Partial Update"))))
+                .content(toJson(Map.of("name", "Partial Update")))
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Partial Update"));
     }
 
-    @Test @WithMockUser(username = "user@example.com", roles = "USER")
+    @Test
     void TC_UU_004_updateOwnProfile() throws Exception {
         mockMvc.perform(put("/api/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("name", "Own Profile Updated"))))
+                .content(toJson(Map.of("name", "Own Profile Updated")))
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Own Profile Updated"));
     }
@@ -119,35 +125,39 @@ public class UserUpdateControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_008_userNotFound() throws Exception {
         mockMvc.perform(put("/api/users/invalidId123")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("name", "Should Fail"))))
+                .content(toJson(Map.of("name", "Should Fail")))
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_009_invalidIdFormat() throws Exception {
         mockMvc.perform(put("/api/users/@@invalid@@")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("name", "Invalid ID"))))
+                .content(toJson(Map.of("name", "Invalid ID")))
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_010_invalidEmailFormatInUpdate() throws Exception {
         mockMvc.perform(put("/api/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(Map.of("email", "bademail"))))
+                .content(toJson(Map.of("email", "bademail")))
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_011_emptyPayload() throws Exception {
         mockMvc.perform(put("/api/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content("{}")
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
@@ -167,26 +177,28 @@ public class UserUpdateControllerTest {
     //             .andExpect(jsonPath("$.email").value(maxEmail));
     // }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_013_updateWithSpecialCharacters() throws Exception {
         mockMvc.perform(put("/api/users/{id}", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "😊 John",
                         "email", "john@mail.com"
-                ))))
+                )))
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("😊 John"))
                 .andExpect(jsonPath("$.email").value("john@mail.com"));
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_014_boundaryUUID() throws Exception {
         mockMvc.perform(put("/api/users/{id}", "00000000-0000-0000-0000-000000000000")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "Boundary Test"
-                ))))
+                )))
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
@@ -203,7 +215,7 @@ public class UserUpdateControllerTest {
     //             .andExpect(status().isOk()); // or .andExpect(status().isPayloadTooLarge());
     // }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_016_simultaneousUpdates() throws Exception {
         Runnable updateTask = () -> {
             try {
@@ -211,7 +223,8 @@ public class UserUpdateControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(Map.of(
                                 "name", "Concurrent Update"
-                        ))))
+                        )))
+                        .header("Authorization", userJwt))
                         .andExpect(status().isOk());
             } catch (Exception ignored) {}
         };
@@ -225,7 +238,7 @@ public class UserUpdateControllerTest {
         t2.join();
     }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_017_userDeletedMidUpdate() throws Exception {
         userRepository.deleteById(userId); // simulate deletion
 
@@ -233,7 +246,8 @@ public class UserUpdateControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "Deleted User Update"
-                ))))
+                )))
+                .header("Authorization", userJwt))
                 .andExpect(status().isNotFound());
     }
 
@@ -248,14 +262,15 @@ public class UserUpdateControllerTest {
     //             .andExpect(status().isInternalServerError()); // or .isGatewayTimeout()
     // }
 
-    @Test @WithMockUser(roles = "USER")
+    @Test
     void TC_UU_020_updateWithUnexpectedExtraFields() throws Exception {
         mockMvc.perform(put("/api/users/{id}", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "Valid Update",
                         "randomField", "Should be ignored"
-                ))))
+                )))
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Valid Update"))
                 .andExpect(jsonPath("$.randomField").doesNotExist());

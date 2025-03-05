@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.User;
+import jakarta.validation.constraints.Pattern;
 import com.example.backend.dto.UserUpdateRequest;
 import com.example.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -108,5 +109,19 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.status(404).body(
                     new ErrorResponse("User not found")
                 ));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<?> deleteUser(
+            @PathVariable("id")
+            String id) {
+        if (!id.matches("^[a-fA-F0-9]{24}$")) { // Simple ObjectId format check
+            return ResponseEntity.badRequest().body(
+                new ErrorResponse("Invalid ID format")
+            );
+        }
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,6 +1,7 @@
 package com.example.backend.users;
 
 import com.example.backend.model.User;
+import com.example.backend.security.JwtUtil;
 import com.example.backend.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
@@ -29,13 +30,12 @@ class UserGetControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    private static String existingUserId;
+    private String existingUserId;
+    private String userJwt;
 
-    @BeforeAll
-    static void setup() {
-        // Static setup if required.
-    }
 
     @BeforeEach
     void init() {
@@ -43,6 +43,7 @@ class UserGetControllerTest {
         User user = new User(null, "Valid User", "valid@example.com", "hashedpassword", "USER", new Date(), new Date());
         user = userRepository.save(user);
         existingUserId = user.getId();
+        userJwt = "Bearer " + jwtUtil.generateToken(existingUserId, user.getEmail(), user.getRole());
     }
 
     @AfterEach
@@ -50,34 +51,34 @@ class UserGetControllerTest {
         userRepository.deleteAll();
     }
 
-    // ✅ Positive Test Cases
+    // Positive Test Cases
 
     @Test
     @Order(1)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_001_getExistingUserByValidId() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", existingUserId))
+        mockMvc.perform(get("/api/users/{id}", existingUserId)
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(existingUserId));
     }
 
     @Test
     @Order(2)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_002_authenticatedUserCanFetchProfile() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", existingUserId))
+        mockMvc.perform(get("/api/users/{id}", existingUserId)
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk());
     }
 
     @Test
     @Order(3)
-    @WithMockUser(roles = {"ADMIN"})
     void TC_GU_003_adminCanGetAnyUserProfile() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", existingUserId))
+        mockMvc.perform(get("/api/users/{id}", existingUserId)
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk());
     }
 
-    // ❌ Negative Test Cases
+    // Negative Test Cases
 
     @Test
     @Order(4)
@@ -90,15 +91,15 @@ class UserGetControllerTest {
     @Order(5)
     void TC_GU_005_invalidAuthenticationToken() throws Exception {
         mockMvc.perform(get("/api/users/{id}", existingUserId)
-                        .header("Authorization", "Bearer invalid.token.here"))
+                .header("Authorization", "Bearer invalid.token.here"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @Order(6)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_006_userNotFound() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", "nonexistentId"))
+        mockMvc.perform(get("/api/users/{id}", "nonexistentId")
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
@@ -112,80 +113,80 @@ class UserGetControllerTest {
 
     @Test
     @Order(8)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_008_invalidIdFormat() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", "%%%invalid%%%"))
+        mockMvc.perform(get("/api/users/{id}", "%%%invalid%%%")
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
-    // 🟡 Edge Test Cases
+    // Edge Test Cases
 
     @Test
     @Order(9)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_009_userWithMaximumFieldLengths() throws Exception {
         User longUser = new User(null, "J".repeat(255), "email".repeat(50) + "@example.com", "password", "USER", new Date(), new Date());
         userRepository.save(longUser);
 
-        mockMvc.perform(get("/api/users/{id}", longUser.getId()))
+        mockMvc.perform(get("/api/users/{id}", longUser.getId())
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk());
     }
 
     @Test
     @Order(10)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_010_specialCharactersInId() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", "@@@@"))
+        mockMvc.perform(get("/api/users/{id}", "@@@@")
+                .header("Authorization", userJwt))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @Order(11)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_011_boundaryUUID() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", "000000000000000000000000"))
+        mockMvc.perform(get("/api/users/{id}", "000000000000000000000000")
+                .header("Authorization", userJwt))
                 .andExpect(status().isNotFound());
     }
 
-    // 🛑 Corner Test Cases
+    // Corner Test Cases
 
     @Test
     @Order(12)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_012_simultaneousRequests() throws Exception {
         for (int i = 0; i < 10; i++) {
-            mockMvc.perform(get("/api/users/{id}", existingUserId))
+            mockMvc.perform(get("/api/users/{id}", existingUserId)
+                    .header("Authorization", userJwt))
                     .andExpect(status().isOk());
         }
     }
 
     @Test
     @Order(13)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_013_userDeletedMidRequest() throws Exception {
         userRepository.deleteById(existingUserId);
-        mockMvc.perform(get("/api/users/{id}", existingUserId))
+        mockMvc.perform(get("/api/users/{id}", existingUserId)
+                .header("Authorization", userJwt))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @Order(14)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_014_userWithEmojis() throws Exception {
         User emojiUser = new User(null, "😊 User", "emoji@example.com", "password", "USER", new Date(), new Date());
         userRepository.save(emojiUser);
 
-        mockMvc.perform(get("/api/users/{id}", emojiUser.getId()))
+        mockMvc.perform(get("/api/users/{id}", emojiUser.getId())
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk());
     }
 
     @Test
     @Order(15)
-    @WithMockUser(roles = {"USER"})
     void TC_GU_015_slowDatabaseResponse() throws Exception {
         // Simulation of delay to test handling (can be mocked or simulated).
         Thread.sleep(3000);
-        mockMvc.perform(get("/api/users/{id}", existingUserId))
+        mockMvc.perform(get("/api/users/{id}", existingUserId)
+                .header("Authorization", userJwt))
                 .andExpect(status().isOk());
     }
 
@@ -193,7 +194,7 @@ class UserGetControllerTest {
     @Order(16)
     void TC_GU_016_expiredJwtToken() throws Exception {
         mockMvc.perform(get("/api/users/{id}", existingUserId)
-                        .header("Authorization", "Bearer expired.jwt.token"))
+                .header("Authorization", "Bearer expired.jwt.token"))
                 .andExpect(status().isUnauthorized());
     }
 }

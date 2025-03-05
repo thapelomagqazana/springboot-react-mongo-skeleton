@@ -40,7 +40,7 @@ class UserGetControllerTest {
     @BeforeEach
     void init() {
         userRepository.deleteAll();
-        User user = new User(null, "Valid User", "valid@example.com", "hashedpassword", new Date(), new Date());
+        User user = new User(null, "Valid User", "valid@example.com", "hashedpassword", "USER", new Date(), new Date());
         user = userRepository.save(user);
         existingUserId = user.getId();
     }
@@ -124,7 +124,7 @@ class UserGetControllerTest {
     @Order(9)
     @WithMockUser(roles = {"USER"})
     void TC_GU_009_userWithMaximumFieldLengths() throws Exception {
-        User longUser = new User(null, "J".repeat(255), "email".repeat(50) + "@example.com", "password", new Date(), new Date());
+        User longUser = new User(null, "J".repeat(255), "email".repeat(50) + "@example.com", "password", "USER", new Date(), new Date());
         userRepository.save(longUser);
 
         mockMvc.perform(get("/api/users/{id}", longUser.getId()))
@@ -172,7 +172,7 @@ class UserGetControllerTest {
     @Order(14)
     @WithMockUser(roles = {"USER"})
     void TC_GU_014_userWithEmojis() throws Exception {
-        User emojiUser = new User(null, "😊 User", "emoji@example.com", "password", new Date(), new Date());
+        User emojiUser = new User(null, "😊 User", "emoji@example.com", "password", "USER", new Date(), new Date());
         userRepository.save(emojiUser);
 
         mockMvc.perform(get("/api/users/{id}", emojiUser.getId()))

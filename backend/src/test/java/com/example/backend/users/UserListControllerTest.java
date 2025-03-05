@@ -44,7 +44,7 @@ public class UserListControllerTest {
     @Test @Order(1)
     @WithMockUser
     void TC_LU_001_listAllUsersSuccessfully() throws Exception {
-        userRepository.save(new User(null, "John Doe", "john@example.com", "password", null, null));
+        userRepository.save(new User(null, "John Doe", "john@example.com", "password", "USER", null, null));
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -62,7 +62,7 @@ public class UserListControllerTest {
     @Test @Order(3)
     @WithMockUser(username = "user", roles = {"USER"})
     void TC_LU_003_authenticatedUserCanListUsers() throws Exception {
-        userRepository.save(new User(null, "Jane Doe", "jane@example.com", "password", null, null));
+        userRepository.save(new User(null, "Jane Doe", "jane@example.com", "password", "USER", null, null));
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -72,7 +72,7 @@ public class UserListControllerTest {
     @Test @Order(4)
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void TC_LU_004_adminCanListUsers() throws Exception {
-        userRepository.save(new User(null, "Admin User", "admin@example.com", "password", null, null));
+        userRepository.save(new User(null, "Admin User", "admin@example.com", "password", "USER", null, null));
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -106,7 +106,7 @@ public class UserListControllerTest {
     @WithMockUser
     void TC_LU_009_largeNumberOfUsers() throws Exception {
         IntStream.range(0, 10000).forEach(i ->
-                userRepository.save(new User(null, "User" + i, "user" + i + "@example.com", "password", null, null))
+                userRepository.save(new User(null, "User" + i, "user" + i + "@example.com", "password", "USER", null, null))
         );
 
         mockMvc.perform(get("/api/users?limit=10000"))
@@ -119,7 +119,7 @@ public class UserListControllerTest {
     void TC_LU_010_maxFieldLengthUsers() throws Exception {
         String longName = "N".repeat(255);
         String longEmail = "e".repeat(247) + "@x.com";
-        userRepository.save(new User(null, longName, longEmail, "password", null, null));
+        userRepository.save(new User(null, longName, longEmail, "password", "USER", null, null));
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -131,7 +131,7 @@ public class UserListControllerTest {
     @WithMockUser
     void TC_LU_011_paginationParameters() throws Exception {
         IntStream.range(0, 100).forEach(i ->
-                userRepository.save(new User(null, "User" + i, "user" + i + "@example.com", "password", null, null))
+                userRepository.save(new User(null, "User" + i, "user" + i + "@example.com", "password", "USER", null, null))
         );
 
         mockMvc.perform(get("/api/users?page=1&limit=50"))
@@ -162,7 +162,7 @@ public class UserListControllerTest {
     @Test @Order(12)
     @WithMockUser
     void TC_LU_014_specialCharactersInUser() throws Exception {
-        userRepository.save(new User(null, "😊 User 🚀", "emoji@example.com", "password", null, null));
+        userRepository.save(new User(null, "😊 User 🚀", "emoji@example.com", "password", "USER", null, null));
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -172,7 +172,7 @@ public class UserListControllerTest {
     @Test @Order(13)
     @WithMockUser
     void TC_LU_015_deletedUserMidRequest() throws Exception {
-        User user = userRepository.save(new User(null, "Temporary User", "temp@example.com", "password", null, null));
+        User user = userRepository.save(new User(null, "Temporary User", "temp@example.com", "password", "USER", null, null));
         userRepository.delete(user);
 
         mockMvc.perform(get("/api/users"))

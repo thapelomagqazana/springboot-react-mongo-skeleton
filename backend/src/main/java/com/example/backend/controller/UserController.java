@@ -1,11 +1,13 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.User;
+import com.example.backend.dto.UserUpdateRequest;
 import com.example.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
@@ -76,4 +78,35 @@ public class UserController {
     }
 
     record ErrorResponse(String message) {}
+
+    /**
+     * PUT /api/users/{id}
+     * Updates a user by ID.
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<?> updateUser(
+            @PathVariable String id,
+            @Valid @RequestBody UserUpdateRequest updateRequest
+    ) {
+        if (!id.matches("^[a-fA-F0-9]{24}$")) { // Simple ObjectId format check
+            return ResponseEntity.badRequest().body(
+                new ErrorResponse("Invalid ID format")
+            );
+        }
+
+        if (updateRequest.getName() == null && updateRequest.getEmail() == null) {
+            return ResponseEntity.badRequest().body(
+                new ErrorResponse("No data provided")
+            );
+        }
+
+        Optional<User> updatedUser = userService.updateUser(id, updateRequest);
+
+        return updatedUser
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).body(
+                    new ErrorResponse("User not found")
+                ));
+    }
 }

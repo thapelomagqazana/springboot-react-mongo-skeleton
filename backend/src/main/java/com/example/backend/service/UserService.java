@@ -1,13 +1,16 @@
 package com.example.backend.service;
 
 import com.example.backend.model.User;
+import com.example.backend.dto.UserUpdateRequest;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Optional;
+import java.util.Date;
 
 /**
  * Service to handle business logic for user operations.
@@ -35,5 +38,18 @@ public class UserService {
 
     public Optional<User> findById(String id) {
         return userRepository.findById(id);
+    }
+
+    public Optional<User> updateUser(String id, @Valid UserUpdateRequest updateRequest) {
+        return userRepository.findById(id).map(user -> {
+            if (updateRequest.getName() != null) {
+                user.setName(updateRequest.getName());
+            }
+            if (updateRequest.getEmail() != null) {
+                user.setEmail(updateRequest.getEmail());
+            }
+            user.setUpdated(new Date());
+            return userRepository.save(user);
+        });
     }
 }

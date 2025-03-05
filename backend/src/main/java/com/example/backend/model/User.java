@@ -25,6 +25,9 @@ public class User {
     private String password;
 
     @Builder.Default
+    private String role = "USER";
+
+    @Builder.Default
     private Date created = new Date();
 
     @Builder.Default

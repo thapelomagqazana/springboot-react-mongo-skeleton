@@ -45,22 +45,29 @@ public class AuthService {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
+        // Default role handling
+        String role = (request.getRole() == null || request.getRole().isBlank())
+        ? "USER"
+        : request.getRole().toUpperCase();
+
         // Map DTO to Entity
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(role);  // Set default or provided role
 
         // Save to DB
         User savedUser = userRepository.save(user);
 
         // Map Entity to Response DTO
         return new UserResponse(
-                savedUser.getId(),
-                savedUser.getName(),
-                savedUser.getEmail(),
-                savedUser.getCreated(),
-                savedUser.getUpdated()
+            savedUser.getId(),
+            savedUser.getName(),
+            savedUser.getEmail(),
+            savedUser.getRole(),
+            savedUser.getCreated(),
+            savedUser.getUpdated()
         );
     }
 
@@ -72,6 +79,6 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return jwtUtil.generateToken(email);
+        return jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
     }
 }

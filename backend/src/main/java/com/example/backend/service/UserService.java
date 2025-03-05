@@ -1,61 +1,39 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.UserRequest;
-import com.example.backend.dto.UserResponse;
-import com.example.backend.exception.UserAlreadyExistsException;
-import com.example.backend.exception.PayloadTooLargeException;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Optional;
+
 /**
- * Handles user business logic and validations before saving.
+ * Service to handle business logic for user operations.
  */
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    private static final int MAX_PAYLOAD_SIZE = 10_000_000; // 10MB
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
     /**
-     * Creates a new user with validation, duplicate checking, and password hashing.
+     * Retrieves paginated list of users.
      *
-     * @param request UserRequest object containing the user data.
-     * @return UserResponse with the created user's public details.
+     * @param page  Page number (starting from 0)
+     * @param limit Number of users per page
+     * @return List of users
      */
-    public UserResponse createUser(UserRequest request) {
+    public List<User> getUsers(int page, int limit) {
+        return userRepository.findAll()
+                .stream()
+                .skip((long) page * limit)
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
 
-        if (request.toString().length() > MAX_PAYLOAD_SIZE) {
-            throw new PayloadTooLargeException("Payload too large");
-        }
-
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Email already exists");
-        }
-
-        // Map DTO to Entity
-        User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        // Save to DB
-        User savedUser = userRepository.save(user);
-
-        // Map Entity to Response DTO
-        return new UserResponse(
-                savedUser.getId(),
-                savedUser.getName(),
-                savedUser.getEmail(),
-                savedUser.getCreated(),
-                savedUser.getUpdated()
-        );
+    public Optional<User> findById(String id) {
+        return userRepository.findById(id);
     }
 }

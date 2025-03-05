@@ -52,10 +52,12 @@ public class UserCreateControllerTest {
         return objectMapper.writeValueAsString(user);
     }
 
+    static final String ENDPOINT = "/auth/signup";
+
     // Positive Test Cases
     @Test @Order(1)
     void TC001_createValidUser() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John Doe",
@@ -70,7 +72,7 @@ public class UserCreateControllerTest {
 
     @Test @Order(2)
     void TC002_createMinimalValidUser() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "A",
@@ -82,7 +84,7 @@ public class UserCreateControllerTest {
 
     @Test @Order(3)
     void TC003_createSecondUniqueUser() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "Jane",
@@ -95,7 +97,7 @@ public class UserCreateControllerTest {
     // ❌ Negative Test Cases
     @Test
     void TC004_missingName() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "john@example.com",
@@ -107,7 +109,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC005_missingEmail() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John",
@@ -119,7 +121,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC006_missingPassword() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John",
@@ -131,7 +133,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC007_invalidEmailFormat() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John",
@@ -144,14 +146,14 @@ public class UserCreateControllerTest {
 
     @Test @Order(4)
     void TC008_duplicateEmail() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John Duplicate",
                         "email", "john@example.com",
                         "password", "Password123"
                 ))));
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John Duplicate",
@@ -164,7 +166,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC009_weakPassword() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John",
@@ -178,7 +180,7 @@ public class UserCreateControllerTest {
     // 🟡 Edge Test Cases
     @Test
     void TC010_nameOneCharacter() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "J",
@@ -190,7 +192,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC011_name255Characters() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "J".repeat(255),
@@ -202,7 +204,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC012_passwordMinLength() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John",
@@ -214,7 +216,7 @@ public class UserCreateControllerTest {
 
     @Test
     void TC013_password255Characters() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John",
@@ -229,7 +231,7 @@ public class UserCreateControllerTest {
         @Test
         @Order(14)
         void TC014_sqlInjectionInName() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "'; DROP TABLE users; --",
@@ -243,7 +245,7 @@ public class UserCreateControllerTest {
         @Test
         @Order(15)
         void TC015_xssInjectionInName() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "<script>alert(1)</script>",
@@ -257,7 +259,7 @@ public class UserCreateControllerTest {
         @Test
         @Order(16)
         void TC016_unicodeEmail() throws Exception {
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "name", "John Unicode",
@@ -272,7 +274,7 @@ public class UserCreateControllerTest {
         // @Order(17)
         // void TC017_largePayload() throws Exception {
         // String largeString = "A".repeat(10 * 1024 * 1024); // ~10MB string
-        // mockMvc.perform(post("/api/users")
+        // mockMvc.perform(post(ENDPOINT)
         //         .contentType(MediaType.APPLICATION_JSON)
         //         .content(toJson(Map.of(
         //                 "name", largeString,
@@ -292,13 +294,13 @@ public class UserCreateControllerTest {
         );
 
         // First submission
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(user)))
                 .andExpect(status().isCreated());
 
         // Immediate duplicate
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(user)))
                 .andExpect(status().isConflict())

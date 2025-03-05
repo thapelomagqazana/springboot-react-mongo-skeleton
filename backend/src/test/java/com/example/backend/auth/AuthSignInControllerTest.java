@@ -101,10 +101,12 @@ public class AuthSignInControllerTest {
         return objectMapper.writeValueAsString(credentials);
     }
 
+    static final String ENDPOINT = "/auth/signin";
+
     // 🟢 Positive Test Cases
     @Test @Order(1)
     void TC_SI_001_validCredentials() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "user@example.com",
@@ -116,7 +118,7 @@ public class AuthSignInControllerTest {
 
     @Test @Order(2)
     void TC_SI_002_unicodeEmail() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "jöhn@example.com",
@@ -128,7 +130,7 @@ public class AuthSignInControllerTest {
 
     @Test @Order(3)
     void TC_SI_003_maxPasswordLength() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "long@example.com",
@@ -141,7 +143,7 @@ public class AuthSignInControllerTest {
     // 🔴 Negative Test Cases
     @Test
     void TC_SI_004_missingEmail() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "password", "Password123"
@@ -152,7 +154,7 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_005_missingPassword() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "user@example.com"
@@ -163,7 +165,7 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_006_invalidEmailFormat() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "user@",
@@ -175,7 +177,7 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_007_incorrectPassword() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "user@example.com",
@@ -187,20 +189,20 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_008_nonExistentEmail() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "unknown@example.com",
                         "password", "Password123"
                 ))))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("Invalid email or password")));
+                .andExpect(jsonPath("$.message").value(containsString("User not found")));
     }
 
     // 🟡 Edge Test Cases
     @Test
     void TC_SI_009_passwordEightCharacters() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "user8@example.com",
@@ -212,7 +214,7 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_010_password255Characters() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "user255@example.com",
@@ -237,7 +239,7 @@ public class AuthSignInControllerTest {
     // 🟠 Corner Test Cases
     @Test
     void TC_SI_012_sqlInjectionInEmail() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "' OR '1'='1",
@@ -248,7 +250,7 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_013_xssInjectionInEmail() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "<script>alert(1)</script>",
@@ -271,7 +273,7 @@ public class AuthSignInControllerTest {
 
     @Test
     void TC_SI_015_specialCharactersPassword() throws Exception {
-        mockMvc.perform(post("/auth/signin")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of(
                         "email", "special@example.com",

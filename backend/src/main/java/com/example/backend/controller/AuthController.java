@@ -10,6 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.example.backend.dto.UserRequest;
+import com.example.backend.dto.UserResponse;
+import com.example.backend.service.UserService;
+import com.example.backend.service.AuthService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,27 +33,34 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private AuthService authService;
+
+    /**
+     * POST /api/users - Create a new user account.
+     *
+     * @param request Validated UserRequest payload.
+     * @return UserResponse with created user details.
+     */
+    @PostMapping("/signup")
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
+        UserResponse response = authService.createUser(request);
+        return ResponseEntity.status(201).body(response);
+    }
+
     /**
      * Handles sign-in with email and password.
      */
     @PostMapping("/signin")
     public ResponseEntity<?> signIn(@Valid @RequestBody SignInRequest request) {
-        User user = userRepository.findByEmail(request.email)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.password, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = authService.authenticate(request.email, request.password);
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("user", Map.of(
-                "id", user.getId(),
-                "name", user.getName(),
-                "email", user.getEmail()
-        ));
 
         return ResponseEntity.ok(response);
     }

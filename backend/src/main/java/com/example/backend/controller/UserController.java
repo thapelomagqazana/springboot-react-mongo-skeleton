@@ -4,6 +4,8 @@ import com.example.backend.model.User;
 import com.example.backend.dto.UserUpdateRequest;
 import com.example.backend.exception.UserNotFoundException;
 import com.example.backend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "User Management", description = "Endpoints for managing users including listing, retrieval, update, and deletion.")
 public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -34,10 +37,14 @@ public class UserController {
     /**
      * Retrieves a paginated list of users.
      *
-     * @param page  page number (starting from 0)
-     * @param limit number of users per page
-     * @return List of users or 500 on failure
+     * @param page  Page number (starting from 0).
+     * @param limit Number of users per page.
+     * @return List of users or 500 on failure.
      */
+    @Operation(
+            summary = "List Users",
+            description = "Retrieve a paginated list of all users."
+    )
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<User>> listUsers(
@@ -58,9 +65,13 @@ public class UserController {
     /**
      * Retrieves a user by ID.
      *
-     * @param id User ID
-     * @return User object if found or appropriate error response
+     * @param id User ID.
+     * @return User object if found or appropriate error response.
      */
+    @Operation(
+            summary = "Get User by ID",
+            description = "Retrieve a single user by their unique ID."
+    )
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> getUserById(@PathVariable String id) {
@@ -96,10 +107,14 @@ public class UserController {
     /**
      * Updates a user by ID.
      *
-     * @param id             User ID
-     * @param updateRequest  User update payload
-     * @return Updated user object or error response
+     * @param id             User ID.
+     * @param updateRequest  User update payload.
+     * @return Updated user object or error response.
      */
+    @Operation(
+            summary = "Update User",
+            description = "Update a user's details like name and email by their ID."
+    )
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> updateUser(
@@ -138,9 +153,13 @@ public class UserController {
     /**
      * Deletes a user by ID.
      *
-     * @param id User ID
-     * @return 204 No Content if successful or appropriate error response
+     * @param id User ID.
+     * @return 204 No Content if successful or appropriate error response.
      */
+    @Operation(
+            summary = "Delete User",
+            description = "Delete a user from the system by their ID."
+    )
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> deleteUser(
@@ -170,7 +189,7 @@ public class UserController {
     /**
      * Error response wrapper.
      *
-     * @param message Error message
+     * @param message Error message.
      */
     record ErrorResponse(String message) {}
 }

@@ -1,6 +1,8 @@
 package com.example.backend.dto;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.constraints.*;
 
@@ -9,6 +11,8 @@ import jakarta.validation.constraints.*;
  * Includes validation constraints for each field.
  */
 @Data
+@Getter
+@Setter
 public class UserRequest {
 
     @NotBlank(message = "Name is required")

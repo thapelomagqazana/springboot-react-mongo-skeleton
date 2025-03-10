@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo_container
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: skeleton_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    depends_on:
+      - mongo
+
+  backend:
+    build: ./backend
+    container_name: springboot_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/skeleton_db
+      DB_NAME: skeleton_db
+      SERVER_PORT: 8080
+      JWT_SECRET: your_jwt_secret
+      JWT_EXPIRATION_MS: 86400000
+      FRONTEND_ORIGIN: http://localhost:3000
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    container_name: react_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_PORT: 3000
+      VITE_API_URL: http://localhost:8080
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+    driver: local

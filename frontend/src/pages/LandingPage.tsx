@@ -7,11 +7,9 @@ import APIList from '../components/landing/APIList';
 export default function LandingPage() {
   return (
     <>
-      {/* <Navbar /> */}
       <Hero />
       <FeaturesGrid />
       <APIList />
-      {/* <Footer /> */}
     </>
   );
 }

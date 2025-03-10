@@ -9,7 +9,7 @@ export default function FeaturesGrid() {
         <div className="grid gap-6 md:grid-cols-3">
           <FeatureCard
             title="Spring Boot Backend"
-            description="Robust REST API with JWT Auth and MongoDB or PostgreSQL."
+            description="Robust REST API with JWT Auth and MongoDB."
             icon={<FaServer />}
           />
           <FeatureCard

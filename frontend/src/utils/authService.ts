@@ -35,8 +35,8 @@ export const signIn = async (email: string, password: string) => {
     password,
   });
 
-  const { access_token } = response.data;
-  storeToken(access_token);
+  const { token } = response.data;
+  storeToken(token);
 
   return response.data;
 };

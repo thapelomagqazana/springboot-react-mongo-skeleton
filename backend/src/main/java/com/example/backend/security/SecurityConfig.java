@@ -51,12 +51,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors() // Enable CORS here
+            .and()
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(authenticationEntryPoint())
                 .accessDeniedHandler(accessDeniedHandler())
             )
             .authorizeHttpRequests(auth -> auth
-                // Allow public access to Swagger
                 .requestMatchers(
                     "/swagger-ui/**",
                     "/v3/api-docs/**",

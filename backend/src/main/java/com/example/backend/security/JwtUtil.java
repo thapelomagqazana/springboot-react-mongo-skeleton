@@ -1,7 +1,7 @@
 package com.example.backend.security;
 
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Value;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -14,11 +14,10 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${app.jwt.secret}")
-    private String SECRET_KEY;
+    private final Dotenv dotenv = Dotenv.load();
 
-    @Value("${app.jwt.expiration}")
-    private long EXPIRATION_TIME;
+    private final String SECRET_KEY = dotenv.get("JWT_SECRET");
+    private final long EXPIRATION_TIME = Long.parseLong(dotenv.get("JWT_EXPIRATION_MS"));
 
     /**
      * Generate JWT with id, email, and role.
